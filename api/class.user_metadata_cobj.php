@@ -69,7 +69,7 @@ class user_metadata_cobj {
 			}
 		}
 		
-		if ($conf['debug']) debug($this->data);
+		if ($conf['debug']) t3lib_div::debug($this->data);
 		
 		$content = $this->getFieldVal($field);
 		
@@ -89,11 +89,12 @@ class user_metadata_cobj {
 		
 		if (file_exists($file)) {
 			if ($conf['exifTool']) {
-				$cmd = t3lib_exec::getCommand($conf['exifTool']) . '  "' . $$file . '"';
-				exec($cmd, $exif = '', $ret = '');
+				//$cmd = t3lib_exec::getCommand($conf['exifTool']) . '  "' . $file . '"';
+				$cmd = $conf['exifTool'] . '  "' . $file . '"';
+				exec($cmd, $exif, $ret = '');
 				
 				if (!$ret AND is_array($exif)) {
-					$exif_data = extractData($exif, $conf['exifColumnSeparator'], $conf['exifKeyColumn'], $conf['exifValueColumn']);
+					$exif_data = self::extractData($exif, $conf['exifColumnSeparator'], $conf['exifKeyColumn'], $conf['exifValueColumn']);
 				}
 				
 			} else {
@@ -123,11 +124,12 @@ class user_metadata_cobj {
 		
 		if (file_exists($file)) {
 			if ($conf['iptcTool']) {
-				$cmd = t3lib_exec::getCommand($conf['iptcTool']) . '  "' . $$file . '"';
-				exec($cmd, $iptc = '', $ret = '');
+				//$cmd = t3lib_exec::getCommand($conf['iptcTool']) . '  "' . $file . '"';
+				$cmd = $conf['iptcTool'] . '  "' . $file . '"';
+				exec($cmd, $iptc, $ret = '');
 				
 				if (!$ret AND is_array($iptc)) {
-					$iptc_data = extractData($iptc, $conf['iptcColumnSeparator'], $conf['iptcKeyColumn'], $conf['iptcValueColumn']);
+					$iptc_data = self::extractData($iptc, $conf['iptcColumnSeparator'], $conf['iptcKeyColumn'], $conf['iptcValueColumn']);
 				}
 				
 			} else {
@@ -155,9 +157,9 @@ class user_metadata_cobj {
 	 * @param	integer	$keyCol
 	 * @param	integer	$valueCol
 	 */
-	function extractData($data, $separator, $keyCol, $valueCol) {
+	private static function extractData($data, $separator, $keyCol, $valueCol) {
 		$info = array();
-		foreach ($output as $content) {
+		foreach ($data as $content) {
 			$separator = '\s+';
 			$temp = preg_split("/$separator/", $content, $valueCol + 1);
 			
