@@ -12,6 +12,6 @@ iptcTool =
 	# cat=basic; type=string; label=Column separator
 iptcColumnSeparator = \s+
 	# cat=basic; type=int; label=Key column
-iptcKeyColumn = 0
+iptcKeyColumn = 1
 	# cat=basic; type=int; label=Value column
-iptcValueColumn = 3
+iptcValueColumn = 4
