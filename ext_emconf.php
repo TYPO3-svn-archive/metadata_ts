@@ -3,7 +3,7 @@
 ########################################################################
 # Extension Manager/Repository config file for ext: "metadata_ts"
 #
-# Auto generated 17-07-2008 22:51
+# Auto generated 13-03-2009 18:10
 #
 # Manual updates:
 # Only the data in the array - anything else is removed by next write.
@@ -21,7 +21,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'conflicts' => '',
 	'priority' => '',
 	'module' => '',
-	'state' => 'experimental',
+	'state' => 'alpha',
 	'internal' => '',
 	'uploadfolder' => 0,
 	'createDirs' => '',
@@ -29,7 +29,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'clearCacheOnLoad' => 0,
 	'lockType' => '',
 	'author_company' => '',
-	'version' => '0.0.1',
+	'version' => '0.1.0',
 	'constraints' => array(
 		'depends' => array(
 		),
@@ -38,7 +38,7 @@ $EM_CONF[$_EXTKEY] = array(
 		'suggests' => array(
 		),
 	),
-	'_md5_values_when_last_written' => 'a:5:{s:9:"ChangeLog";s:4:"4c4f";s:10:"README.txt";s:4:"3935";s:12:"ext_icon.gif";s:4:"5807";s:17:"ext_localconf.php";s:4:"253c";s:32:"api/class.user_metadata_cobj.php";s:4:"5553";}',
+	'_md5_values_when_last_written' => 'a:8:{s:9:"ChangeLog";s:4:"c945";s:10:"README.txt";s:4:"3935";s:21:"ext_conf_template.txt";s:4:"fce1";s:12:"ext_icon.gif";s:4:"5807";s:17:"ext_localconf.php";s:4:"253c";s:32:"api/class.user_metadata_cobj.php";s:4:"c0f7";s:14:"doc/manual.sxw";s:4:"58f2";s:18:"samples/wbtc05.jpg";s:4:"b9a7";}',
 	'suggests' => array(
 	),
 );
