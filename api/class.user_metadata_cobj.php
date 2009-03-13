@@ -48,6 +48,16 @@ class user_metadata_cobj {
 		if (!t3lib_div::isAbsPath($file)) {
 			$file = t3lib_div::getFileAbsFileName($file);
 		}
+		
+		$service = 'image:exif';
+		if (is_object($serviceObj = t3lib_div::makeInstanceService('metaExtract', $service))) {
+			$serviceObj->setInputFile($file, $service);
+
+			if ($serviceObj->process('','',array('meta'=>$meta)) > 0 
+				&& (is_array($svmeta = $serviceObj->getOutput()))) {
+				$this->storeArray('metaExtract:', '', $svmeta);
+			}
+		}
 		 
 		$_fields = t3lib_div::trimExplode('//', $field, 1);
 		foreach ($_fields as $f) {
@@ -71,20 +81,33 @@ class user_metadata_cobj {
 	 *
 	 * @param	string		$file: filename of the image
 	 */
-	private function EXIF($file) {
+	function EXIF($file) {
 		if ($this->has_exif) return;
 		
-		if (file_exists($file)) {
-			$image_info = getimagesize($file);
-		}
+		$conf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
+		$exif_data = array();
 		
-		if ($image_info[2] == 2) { // check for correct image-type
-			$exif_data = exif_read_data($file, TRUE, FALSE); // Load all EXIF informations from the original Picture in an array
-			$exif_data['Comments'] = htmlentities(str_replace("\n", '<br />', $exif_array['Comments'])); // Linebreak
+		if (file_exists($file)) {
+			if ($conf['exifTool']) {
+				$cmd = t3lib_exec::getCommand($conf['exifTool']) . '  "' . $$file . '"';
+				exec($cmd, $exif = '', $ret = '');
+				
+				if (!$ret AND is_array($exif)) {
+					$exif_data = extractData($exif, $conf['exifColumnSeparator'], $conf['exifKeyColumn'], $conf['exifValueColumn']);
+				}
+				
+			} else {
+				$image_info = getimagesize($file);
+
+				if ($image_info[2] == 2) { // check for correct image-type
+					$exif_data = exif_read_data($file, TRUE, FALSE); // Load all EXIF informations from the original Picture in an array
+					$exif_data['Comments'] = htmlentities(str_replace("\n", '<br />', $exif_array['Comments'])); // Linebreak
+				}
+			}
+		}
 			
 			// Put all data into $this->data
-			$this->storeArray('EXIF:', '', $exif_data);
-		}
+		$this->storeArray('EXIF:', '', $exif_data);
 	}
 	
 	/**
@@ -92,20 +115,63 @@ class user_metadata_cobj {
 	 *
 	 * @param	string		$file: filename of the image
 	 */
-	private function IPTC($file) {
-		if ($this->has_iptc) return;
+	function IPTC($file) {
+		if ($this->has_iptc) return; 
+		
+		$conf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
+		$iptc_data = array();
 		
 		if (file_exists($file)) {
-			getimagesize($file, $image_info);
+			if ($conf['iptcTool']) {
+				$cmd = t3lib_exec::getCommand($conf['iptcTool']) . '  "' . $$file . '"';
+				exec($cmd, $iptc = '', $ret = '');
+				
+				if (!$ret AND is_array($iptc)) {
+					$iptc_data = extractData($iptc, $conf['iptcColumnSeparator'], $conf['iptcKeyColumn'], $conf['iptcValueColumn']);
+				}
+				
+			} else {
+				getimagesize($file, $image_info);
+
+				if (is_array($image_info)) {
+					$iptc_data = iptcparse($image_info["APP13"]);
+				}
+			}
+			
+			
+		}
+			
+		if (is_array($iptc_data)) {
+			// Put all data into $this->data
+			$this->storeArray('IPTC:', '', $iptc_data);
+		}
+	}
+	
+	/**
+	 * Extracts key/value pairs from a command-line output ($data)
+	 *
+	 * @param	array	$data
+	 * @param	string	$separator
+	 * @param	integer	$keyCol
+	 * @param	integer	$valueCol
+	 */
+	function extractData($data, $separator, $keyCol, $valueCol) {
+		$info = array();
+		foreach ($output as $content) {
+			$separator = '\s+';
+			$temp = preg_split("/$separator/", $content, $valueCol + 1);
+			
+			$key = $temp[$keyCol];
+			$value = $temp[$valueCol];
+			
+			if (preg_match('/^lang=".*" (.*)$/', $value, $matches)) {
+				$value = $matches[1];
+			}
+			
+			$info[$key] = $value; 
 		}
 		
-		if (is_array($image_info)) {
-			$iptc_data = iptcparse($image_info["APP13"]);
-			if (is_array($iptc_data)) {
-				// Put all data into $this->data
-				$this->storeArray('IPTC:', '', $iptc_data);
-			}
-		}
+		return $info;
 	}
 	
 	/**
@@ -115,7 +181,7 @@ class user_metadata_cobj {
 	 * @param	string		$key
 	 * @param	array		$values
 	 */
-	private function storeArray($prefix, $key, $values) {
+	function storeArray($prefix, $key, $values) {
 		foreach ($values as $subkey => $value) {
 			$datakey = '';
 			if ($key) $datakey = $key . '|';
@@ -124,7 +190,7 @@ class user_metadata_cobj {
 			if (is_array($value)) {
 				$this->storeArray($prefix, $datakey, $value);
 			} else {
-				$this->data[$prefix. $datakey] = $value;
+				$this->data[$prefix. $datakey] = utf8_decode(utf8_decode($value));
 			}
 		}
 	}
@@ -135,7 +201,7 @@ class user_metadata_cobj {
 	 * @param	string		The fieldname, eg. "title" or "navtitle // title" (in the latter case the value of $this->data[navtitle] is returned if not blank, otherwise $this->data[title] will be)
 	 * @return	string
 	 */
-	private function getFieldVal($field) {
+	function getFieldVal($field) {
 		if (!strstr($field,'//')) {
 			return $this->data[trim($field)];
 		} else {
