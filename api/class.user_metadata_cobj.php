@@ -192,7 +192,7 @@ class user_metadata_cobj {
 			if (is_array($value)) {
 				$this->storeArray($prefix, $datakey, $value);
 			} else {
-				$this->data[$prefix. $datakey] = utf8_decode(utf8_decode($value));
+				$this->data[$prefix. $datakey] = $value;
 			}
 		}
 	}
