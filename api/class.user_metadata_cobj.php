@@ -30,6 +30,7 @@
 class user_metadata_cobj {
 	
 	private $data = array();
+	private $conf = array();
 	private $has_exif = false;
 	private $has_iptc = false;
 	
@@ -42,22 +43,23 @@ class user_metadata_cobj {
 	 * @return	string		output
 	 */
 	function cObjGetSingleExt($name, $conf, $TSkey, &$oCObj) {
-		$file = $conf['file'];
-		$field = $conf['metadata.']['field'];
+		$this->conf = $conf;
+		$file = $oCObj->stdWrap($conf['file'], $conf['file.']);
+		$field = $this->conf['metadata.']['field'];
 		
 		if (!t3lib_div::isAbsPath($file)) {
 			$file = t3lib_div::getFileAbsFileName($file);
 		}
 		
-		$service = 'image:exif';
-		if (is_object($serviceObj = t3lib_div::makeInstanceService('metaExtract', $service))) {
-			$serviceObj->setInputFile($file, $service);
-
-			if ($serviceObj->process('','',array('meta'=>$meta)) > 0 
-				&& (is_array($svmeta = $serviceObj->getOutput()))) {
-				$this->storeArray('metaExtract:', '', $svmeta);
-			}
-		}
+		//$service = 'image:exif';
+		//if (is_object($serviceObj = t3lib_div::makeInstanceService('metaExtract', $service))) {
+		//	$serviceObj->setInputFile($file, $service);
+		//
+		//	if ($serviceObj->process('', '', array('meta' => $meta)) > 0 
+		//		&& (is_array($svmeta = $serviceObj->getOutput()))) {
+		//		$this->storeArray('metaExtract:', '', $svmeta);
+		//	}
+		//}
 		 
 		$_fields = t3lib_div::trimExplode('//', $field, 1);
 		foreach ($_fields as $f) {
@@ -69,11 +71,13 @@ class user_metadata_cobj {
 			}
 		}
 		
-		if ($conf['debug']) t3lib_div::debug($this->data);
+		if ($this->conf['debug']) {
+			t3lib_div::debug($this->data);
+		}
 		
 		$content = $this->getFieldVal($field);
 		
-		return $oCObj->stdWrap($content, $conf);
+		return $oCObj->stdWrap($content, $this->conf);
 	}
 	
 	/**
@@ -84,17 +88,19 @@ class user_metadata_cobj {
 	function EXIF($file) {
 		if ($this->has_exif) return;
 		
-		$conf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
+		$extconf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
 		$exif_data = array();
 		
 		if (file_exists($file)) {
-			if ($conf['exifTool']) {
-				//$cmd = t3lib_exec::getCommand($conf['exifTool']) . '  "' . $file . '"';
-				$cmd = $conf['exifTool'] . '  "' . $file . '"';
+			if ($extconf['exifTool']) {
+				//$cmd = t3lib_exec::getCommand($extconf['exifTool']) . '  "' . $file . '"';
+				$cmd = $extconf['exifTool'] . '  "' . $file . '"';
 				exec($cmd, $exif, $ret = '');
 				
-				if (!$ret AND is_array($exif)) {
-					$exif_data = self::extractData($exif, $conf['exifColumnSeparator'], $conf['exifKeyColumn'], $conf['exifValueColumn']);
+				if (!$ret && is_array($exif)) {
+					$exif_data = self::extractData($exif, $extconf['exifColumnSeparator'], $extconf['exifKeyColumn'], $extconf['exifValueColumn']);
+				} else {
+					// Debug this problem
 				}
 				
 			} else {
@@ -119,19 +125,21 @@ class user_metadata_cobj {
 	function IPTC($file) {
 		if ($this->has_iptc) return; 
 		
-		$conf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
+		$extconf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
 		$iptc_data = array();
 		
 		if (file_exists($file)) {
-			if ($conf['iptcTool']) {
-				//$cmd = t3lib_exec::getCommand($conf['iptcTool']) . '  "' . $file . '"';
-				$cmd = $conf['iptcTool'] . '  "' . $file . '"';
+			if ($extconf['iptcTool']) {
+				//$cmd = t3lib_exec::getCommand($extconf['iptcTool']) . '  "' . $file . '"';
+				$cmd = $extconf['iptcTool'] . '  "' . $file . '"';
 				exec($cmd, $iptc, $ret = '');
 				
-				if (!$ret AND is_array($iptc)) {
-					$iptc_data = self::extractData($iptc, $conf['iptcColumnSeparator'], $conf['iptcKeyColumn'], $conf['iptcValueColumn']);
+				if (!$ret && is_array($iptc)) {
+					$iptc_data = self::extractData($iptc, $extconf['iptcColumnSeparator'], $extconf['iptcKeyColumn'], $extconf['iptcValueColumn']);
+				} else {
+					// Debug this problem
 				}
-				
+
 			} else {
 				getimagesize($file, $image_info);
 
