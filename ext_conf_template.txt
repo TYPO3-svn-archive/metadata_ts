@@ -1,4 +1,4 @@
-	# cat=basic; type=string; label=EXIF program with parameter to get a machine readable array: for instance /usr/bin/exif -m -i
+	# cat=basic; type=string; label=EXIF program with parameter: for instance /usr/bin/exif -m -i
 exifTool =
 	# cat=basic; type=string; label=Column separator
 exifColumnSeparator = \t
@@ -7,11 +7,11 @@ exifKeyColumn = 0
 	# cat=basic; type=int; label=Value column
 exifValueColumn = 1
 
-	# cat=basic; type=string; label=IPTC program with parameter to get a machine readable array: for instance /usr/bin/exiv2 exiv2 -px
+	# cat=basic; type=string; label=IPTC program with parameter to get a machine readable array: for instance /usr/bin/exiv2 -px
 iptcTool =
 	# cat=basic; type=string; label=Column separator
 iptcColumnSeparator = \s+
 	# cat=basic; type=int; label=Key column
-iptcKeyColumn = 1
+iptcKeyColumn = 0
 	# cat=basic; type=int; label=Value column
-iptcValueColumn = 4
+iptcValueColumn = 3
