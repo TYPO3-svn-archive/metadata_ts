@@ -109,6 +109,7 @@ class user_metadata_cobj {
 				if ($image_info[2] == 2) { // check for correct image-type
 					$exif_data = exif_read_data($file, TRUE, FALSE); // Load all EXIF informations from the original Picture in an array
 					$exif_data['Comments'] = htmlentities(str_replace("\n", '<br />', $exif_array['Comments'])); // Linebreak
+					$exif_data = self::formatGpsData($exif_data);
 				}
 			}
 		}
@@ -221,6 +222,63 @@ class user_metadata_cobj {
 			}
 		}
 	}
+	
+	/**
+	 * Formats GPS data.
+	 * 
+	 * @param array $exifData
+	 * @return array
+	 */
+	private static function formatGpsData($exifData) {
+		if (isset($exifData['GPSLatitude'])) {
+			$latitude = $exifData['GPSLatitude'];
+			$exifData['GPSLatitudePosition'] = ($exifData['GPSLatitudeRef'] !== 'N' ? '-' : '') . self::calcGpsPosition($latitude);
+		}
+		if (isset($exifData['GPSLongitude'])) {
+			$longitude = $exifData['GPSLongitude'];
+			$exifData['GPSLongitudePosition'] = ($exifData['GPSLongitudeRef'] !== 'E' ? '-' : '') . self::calcGpsPosition($longitude);
+		}
+		if (isset($exifData['GPSLatitudePosition']) && $exifData['GPSLongitudePosition']) {
+			$exifData['GPSLink'] = sprintf('http://maps.google.com/maps?q=%s,%s', $exifData['GPSLatitudePosition'], $exifData['GPSLongitudePosition']);
+		}
+		return $exifData; 
+	}
+	
+	/**
+	 * Calculates GPS position.
+	 * 
+	 * @param array $gpsData
+	 * @return double
+	 */
+	private static function calcGpsPosition($gpsData) {
+		if (function_exists('bcscale')) {
+			bcscale(14);
+			$pos = self::evalFloat($gpsData[0]);
+			$pos = bcadd($pos, bcdiv(self::evalFloat($gpsData[1]), 60));
+			$pos = bcadd($pos, bcdiv(self::evalFloat($gpsData[2]), 3600));
+		} else {
+			$pos = self::evalFloat($gpsData[0]);
+			$pos += self::evalFloat($gpsData[1]) / 60;
+			$pos += self::evalFloat($gpsData[2]) / 3600;
+		}
+		return $pos;
+	}
+	
+	/**
+	 * Evaluates a fractional value.
+	 * 
+	 * @param $frac
+	 * @return float
+	 */
+	private static function evalFloat($frac) {
+		$matches = array();
+		if (preg_match('/(\d+)\/(\d+)/', $frac, $matches)) {
+			return $matches[1] / $matches[2];
+		} else {
+			return 0;
+		}
+	}
+	
 }
 
 
