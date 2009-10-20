@@ -24,8 +24,12 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-/*
- * Handles TS content object FILEINFO
+
+
+/**
+ * Handles TS content object FILEINFO.
+ *
+ * $Id$
  */
 class user_metadata_cobj {
 	
@@ -145,7 +149,7 @@ class user_metadata_cobj {
 				getimagesize($file, $image_info);
 
 				if (is_array($image_info)) {
-					$iptc_data = iptcparse($image_info["APP13"]);
+					$iptc_data = iptcparse($image_info['APP13']);
 				}
 			}
 			
@@ -213,12 +217,14 @@ class user_metadata_cobj {
 	 * @return	string
 	 */
 	function getFieldVal($field) {
-		if (!strstr($field,'//')) {
+		if (!strstr($field, '//')) {
 			return $this->data[trim($field)];
 		} else {
 			$sections = t3lib_div::trimExplode('//', $field, 1);
 			while (list(,$k) = each($sections)) {
-				if (strcmp($this->data[$k],''))	return $this->data[$k];
+				if (strcmp($this->data[$k], '')) {
+					return $this->data[$k];
+				}
 			}
 		}
 	}
@@ -282,7 +288,7 @@ class user_metadata_cobj {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/metadata_ts/api/class.user_metadata_cobj.php'])	{
+if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/metadata_ts/api/class.user_metadata_cobj.php']) {
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/metadata_ts/api/class.user_metadata_cobj.php']);
 }
 ?>
