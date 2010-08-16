@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Xavier Perseguers (typo3@perseguers.ch)
+*  (c) 2008-2010 Xavier Perseguers (typo3@perseguers.ch)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,16 +32,16 @@
  * $Id$
  */
 class user_metadata_cobj {
-	
-	private $data = array();
-	private $conf = array();
-	private $has_exif = false;
-	private $has_iptc = false;
-	
+
+	protected $data = array();
+	protected $conf = array();
+	protected $has_exif = false;
+	protected $has_iptc = false;
+
 	/**
 	 * Rendering the cObject, FILEINFO
 	 *
-	 * @param	string		$name: name of the cObject ('FILEINFO')		
+	 * @param	string		$name: name of the cObject ('FILEINFO')
 	 * @param	array		$conf: array of TypoScript properties
 	 * @param	string		$TSkey: TS key set to this cObject
 	 * @return	string		output
@@ -50,40 +50,45 @@ class user_metadata_cobj {
 		$this->conf = $conf;
 		$file = $oCObj->stdWrap($conf['file'], $conf['file.']);
 		$field = $this->conf['metadata.']['field'];
-		
+
 		if (!t3lib_div::isAbsPath($file)) {
 			$file = t3lib_div::getFileAbsFileName($file);
 		}
-		
+
 		//$service = 'image:exif';
 		//if (is_object($serviceObj = t3lib_div::makeInstanceService('metaExtract', $service))) {
 		//	$serviceObj->setInputFile($file, $service);
 		//
-		//	if ($serviceObj->process('', '', array('meta' => $meta)) > 0 
+		//	if ($serviceObj->process('', '', array('meta' => $meta)) > 0
 		//		&& (is_array($svmeta = $serviceObj->getOutput()))) {
 		//		$this->storeArray('metaExtract:', '', $svmeta);
 		//	}
 		//}
-		 
-		$_fields = t3lib_div::trimExplode('//', $field, 1);
-		foreach ($_fields as $f) {
+
+		$fields = t3lib_div::trimExplode('//', $field, 1);
+		if ($this->conf['debug'] && count($fields) == 0) {
+				// Make sure both EXIF and IPTC are available
+			$fields[] = 'EXIF:';
+			$fields[] = 'IPTC:';
+		}
+		foreach ($fields as $f) {
 			list($type, $metatag) = t3lib_div::trimExplode(':', $f);
-			
+
 			switch ($type) {
 				case 'EXIF': $this->EXIF($file); break;
 				case 'IPTC': $this->IPTC($file); break;
 			}
 		}
-		
+
 		if ($this->conf['debug']) {
 			t3lib_div::debug($this->data);
 		}
-		
+
 		$content = $this->getFieldVal($field);
-		
+
 		return $oCObj->stdWrap($content, $this->conf);
 	}
-	
+
 	/**
 	 * Reads EXIF metatags.
 	 *
@@ -91,22 +96,22 @@ class user_metadata_cobj {
 	 */
 	function EXIF($file) {
 		if ($this->has_exif) return;
-		
+
 		$extconf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
 		$exif_data = array();
-		
+
 		if (file_exists($file)) {
 			if ($extconf['exifTool']) {
 				//$cmd = t3lib_exec::getCommand($extconf['exifTool']) . '  "' . $file . '"';
 				$cmd = $extconf['exifTool'] . '  "' . $file . '"';
 				exec($cmd, $exif, $ret = '');
-				
+
 				if (!$ret && is_array($exif)) {
 					$exif_data = self::extractData($exif, $extconf['exifColumnSeparator'], $extconf['exifKeyColumn'], $extconf['exifValueColumn']);
 				} else {
 					// Debug this problem
 				}
-				
+
 			} else {
 				$image_info = getimagesize($file);
 
@@ -117,28 +122,28 @@ class user_metadata_cobj {
 				}
 			}
 		}
-			
+
 			// Put all data into $this->data
 		$this->storeArray('EXIF:', '', $exif_data);
 	}
-	
+
 	/**
 	 * Reads IPTC metatags.
 	 *
 	 * @param	string		$file: filename of the image
 	 */
 	function IPTC($file) {
-		if ($this->has_iptc) return; 
-		
+		if ($this->has_iptc) return;
+
 		$extconf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
 		$iptc_data = array();
-		
+
 		if (file_exists($file)) {
 			if ($extconf['iptcTool']) {
 				//$cmd = t3lib_exec::getCommand($extconf['iptcTool']) . '  "' . $file . '"';
 				$cmd = $extconf['iptcTool'] . '  "' . $file . '"';
 				exec($cmd, $iptc, $ret = '');
-				
+
 				if (!$ret && is_array($iptc)) {
 					$iptc_data = self::extractData($iptc, $extconf['iptcColumnSeparator'], $extconf['iptcKeyColumn'], $extconf['iptcValueColumn']);
 				} else {
@@ -152,16 +157,16 @@ class user_metadata_cobj {
 					$iptc_data = iptcparse($image_info['APP13']);
 				}
 			}
-			
-			
+
+
 		}
-			
+
 		if (is_array($iptc_data)) {
 			// Put all data into $this->data
 			$this->storeArray('IPTC:', '', $iptc_data);
 		}
 	}
-	
+
 	/**
 	 * Extracts key/value pairs from a command-line output ($data)
 	 *
@@ -170,27 +175,27 @@ class user_metadata_cobj {
 	 * @param	integer	$keyCol
 	 * @param	integer	$valueCol
 	 */
-	private static function extractData($data, $separator, $keyCol, $valueCol) {
+	protected static function extractData($data, $separator, $keyCol, $valueCol) {
 		$info = array();
 		foreach ($data as $content) {
 			$separator = '\s+';
 			$temp = preg_split("/$separator/", $content, $valueCol + 1);
-			
+
 			$key = $temp[$keyCol];
 			$value = $temp[$valueCol];
-			
+
 			if (preg_match('/^lang=".*" (.*)$/', $value, $matches)) {
 				$value = $matches[1];
 			}
-			
-			$info[$key] = $value; 
+
+			$info[$key] = $value;
 		}
-		
+
 		return $info;
 	}
-	
+
 	/**
-	 * Stores metadata array into private data array.
+	 * Stores metadata array into protected data array.
 	 *
 	 * @param	string		$prefix
 	 * @param	string		$key
@@ -201,7 +206,7 @@ class user_metadata_cobj {
 			$datakey = '';
 			if ($key) $datakey = $key . '|';
 			$datakey .= $subkey;
-			
+
 			if (is_array($value)) {
 				$this->storeArray($prefix, $datakey, $value);
 			} else {
@@ -209,7 +214,7 @@ class user_metadata_cobj {
 			}
 		}
 	}
-	
+
 	/**
 	 * Returns the value for the field from $this->data. If "//" is found in the $field value that token will split the field values apart and the first field having a non-blank value will be returned.
 	 *
@@ -228,14 +233,14 @@ class user_metadata_cobj {
 			}
 		}
 	}
-	
+
 	/**
 	 * Formats GPS data.
-	 * 
+	 *
 	 * @param array $exifData
 	 * @return array
 	 */
-	private static function formatGpsData($exifData) {
+	protected static function formatGpsData($exifData) {
 		if (isset($exifData['GPSLatitude'])) {
 			$latitude = $exifData['GPSLatitude'];
 			$exifData['GPSLatitudePosition'] = ($exifData['GPSLatitudeRef'] !== 'N' ? '-' : '') . self::calcGpsPosition($latitude);
@@ -247,16 +252,16 @@ class user_metadata_cobj {
 		if (isset($exifData['GPSLatitudePosition']) && $exifData['GPSLongitudePosition']) {
 			$exifData['GPSLink'] = sprintf('http://maps.google.com/maps?q=%s,%s', $exifData['GPSLatitudePosition'], $exifData['GPSLongitudePosition']);
 		}
-		return $exifData; 
+		return $exifData;
 	}
-	
+
 	/**
 	 * Calculates GPS position.
-	 * 
+	 *
 	 * @param array $gpsData
 	 * @return double
 	 */
-	private static function calcGpsPosition($gpsData) {
+	protected static function calcGpsPosition($gpsData) {
 		if (function_exists('bcscale')) {
 			bcscale(14);
 			$pos = self::evalFloat($gpsData[0]);
@@ -269,14 +274,14 @@ class user_metadata_cobj {
 		}
 		return $pos;
 	}
-	
+
 	/**
 	 * Evaluates a fractional value.
-	 * 
+	 *
 	 * @param $frac
 	 * @return float
 	 */
-	private static function evalFloat($frac) {
+	protected static function evalFloat($frac) {
 		$matches = array();
 		if (preg_match('/(\d+)\/(\d+)/', $frac, $matches)) {
 			return $matches[1] / $matches[2];
@@ -284,7 +289,7 @@ class user_metadata_cobj {
 			return 0;
 		}
 	}
-	
+
 }
 
 

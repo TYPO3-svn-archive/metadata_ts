@@ -1,12 +1,16 @@
-09-03-17 Xavier Perseguers  <typo3@perseguers.ch>
+2010-08-16  Xavier Perseguers  <typo3@perseguers.ch>
+
+	* Enhanced debugging information
+
+2010-03-17  Xavier Perseguers  <typo3@perseguers.ch>
 
 	* Added support for dynamically generated file name (thanks to Georg Ringer)
 	* Updated documentation
 
-09-03-13 Xavier Perseguers  <typo3@perseguers.ch>
+2009-03-13  Xavier Perseguers  <typo3@perseguers.ch>
 
 	* Added support for external tools
 
-08-07-17 Xavier Perseguers  <typo3@perseguers.ch>
+2008-07-17  Xavier Perseguers  <typo3@perseguers.ch>
 
 	* Initial release
