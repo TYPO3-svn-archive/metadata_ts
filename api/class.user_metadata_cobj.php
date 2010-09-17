@@ -226,7 +226,7 @@ class user_metadata_cobj {
 			return $this->data[trim($field)];
 		} else {
 			$sections = t3lib_div::trimExplode('//', $field, 1);
-			foreach ($section as $section) {
+			foreach ($sections as $section) {
 				if (strcmp($this->data[$section], '')) {
 					return $this->data[$section];
 				}
