@@ -15,3 +15,6 @@ iptcColumnSeparator = \s+
 iptcKeyColumn = 0
 	# cat=basic; type=int; label=Value column
 iptcValueColumn = 3
+
+	# cat=basic; type=string; label=PDFINFO program: for instance /usr/bin/pdfinfo
+pdfinfoTool =

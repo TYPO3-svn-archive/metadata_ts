@@ -48,6 +48,7 @@ class user_metadata_cobj {
 	 */
 	function cObjGetSingleExt($name, $conf, $TSkey, &$oCObj) {
 		$this->conf = $conf;
+
 		$file = $oCObj->stdWrap($conf['file'], $conf['file.']);
 		$field = $this->conf['metadata.']['field'];
 
@@ -55,28 +56,21 @@ class user_metadata_cobj {
 			$file = t3lib_div::getFileAbsFileName($file);
 		}
 
-		//$service = 'image:exif';
-		//if (is_object($serviceObj = t3lib_div::makeInstanceService('metaExtract', $service))) {
-		//	$serviceObj->setInputFile($file, $service);
-		//
-		//	if ($serviceObj->process('', '', array('meta' => $meta)) > 0
-		//		&& (is_array($svmeta = $serviceObj->getOutput()))) {
-		//		$this->storeArray('metaExtract:', '', $svmeta);
-		//	}
-		//}
-
 		$fields = t3lib_div::trimExplode('//', $field, 1);
 		if ($this->conf['debug'] && count($fields) == 0) {
 				// Make sure both EXIF and IPTC are available
 			$fields[] = 'EXIF:';
 			$fields[] = 'IPTC:';
+			$fields[] = 'XMP:';
 		}
+
 		foreach ($fields as $f) {
 			list($type, $metatag) = t3lib_div::trimExplode(':', $f);
 
 			switch ($type) {
 				case 'EXIF': $this->EXIF($file); break;
 				case 'IPTC': $this->IPTC($file); break;
+				case 'XMP': $this->XMP($file); break;
 			}
 		}
 
@@ -92,9 +86,10 @@ class user_metadata_cobj {
 	/**
 	 * Reads EXIF metatags.
 	 *
-	 * @param	string		$file: filename of the image
+	 * @param string filename of the image
+	 * @return void
 	 */
-	function EXIF($file) {
+	protected function EXIF($file) {
 		if ($this->has_exif) return;
 
 		$extconf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
@@ -102,8 +97,8 @@ class user_metadata_cobj {
 
 		if (file_exists($file)) {
 			if ($extconf['exifTool']) {
-				//$cmd = t3lib_exec::getCommand($extconf['exifTool']) . '  "' . $file . '"';
-				$cmd = $extconf['exifTool'] . '  "' . $file . '"';
+				//$cmd = t3lib_exec::getCommand($extconf['exifTool']) . ' "' . $file . '"';
+				$cmd = $extconf['exifTool'] . ' "' . $file . '"';
 				exec($cmd, $exif, $ret = '');
 
 				if (!$ret && is_array($exif)) {
@@ -130,9 +125,10 @@ class user_metadata_cobj {
 	/**
 	 * Reads IPTC metatags.
 	 *
-	 * @param	string		$file: filename of the image
+	 * @param string filename of the image
+	 * @return void
 	 */
-	function IPTC($file) {
+	protected function IPTC($file) {
 		if ($this->has_iptc) return;
 
 		$extconf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
@@ -140,8 +136,8 @@ class user_metadata_cobj {
 
 		if (file_exists($file)) {
 			if ($extconf['iptcTool']) {
-				//$cmd = t3lib_exec::getCommand($extconf['iptcTool']) . '  "' . $file . '"';
-				$cmd = $extconf['iptcTool'] . '  "' . $file . '"';
+				//$cmd = t3lib_exec::getCommand($extconf['iptcTool']) . ' "' . $file . '"';
+				$cmd = $extconf['iptcTool'] . ' "' . $file . '"';
 				exec($cmd, $iptc, $ret = '');
 
 				if (!$ret && is_array($iptc)) {
@@ -164,6 +160,51 @@ class user_metadata_cobj {
 		if (is_array($iptc_data)) {
 			// Put all data into $this->data
 			$this->storeArray('IPTC:', '', $iptc_data);
+		}
+	}
+
+	/**
+	 * Reads XMP metatags from a PDF file.
+	 *
+	 * @param string $file
+	 * @return void
+	 */
+	protected function XMP($file) {
+		if (strtolower(substr($file, -4)) !== '.pdf') return;
+
+		$extconf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['metadata_ts']);
+		$xmp_data = array();
+
+		if (file_exists($file)) {
+			if ($extconf['pdfinfoTool']) {
+				//$cmd = t3lib_exec::getCommand($extconf['pdfinfoTool']) . ' -meta "' . $file . '"';
+				$cmd = $extconf['pdfinfoTool'] . ' -meta "' . $file . '"';
+
+				exec($cmd, $pdfmeta, $ret = '');
+				if (!$ret && is_array($pdfmeta)) {
+					$xmlStr = '';
+					$output = FALSE;
+					foreach ($pdfmeta as $line) {
+						if (t3lib_div::isFirstPartOfStr($line, '<x:xmpmeta')) {
+							$output = TRUE;
+						} elseif (t3lib_div::isFirstPartOfStr($line, '<'.'?xpacket')) {
+							$output = FALSE;
+						}
+						if ($output) {
+							$xmlStr .= $line;
+						}
+					}
+
+					require_once(t3lib_extMgm::extPath('metadata_ts') . 'lib/PHP_JPEG_Metadata_Toolkit/XMP.php');
+
+					$xmp = read_XMP_array_from_text($xmlStr);
+					$xmp_data = Interpret_XMP_to_Array($xmp);
+				}
+			}
+		}
+
+		if ($xmp_data) {
+			$this->storeArray('XMP:', '', $xmp_data);
 		}
 	}
 

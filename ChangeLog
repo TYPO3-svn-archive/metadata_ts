@@ -1,3 +1,7 @@
+2010-10-20  Xavier Perseguers  <typo3@perseguers.ch>
+
+	* Integrated library PHP_JPEG_Metadata_Toolkit to retrieve XMP metadata (PDF files)
+
 2010-09-17  Xavier Perseguers  <typo3@perseguers.ch>
 
 	* Fixed PHP Warning: Invalid argument supplied for foreach()
