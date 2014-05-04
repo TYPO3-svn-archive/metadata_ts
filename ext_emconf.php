@@ -14,8 +14,8 @@ $EM_CONF[$_EXTKEY] = array(
 	'title' => 'Metadata in TS',
 	'description' => 'Lets you extract metadata from different file formats using TypoScript.',
 	'category' => 'misc',
-	'author' => 'Xavier Perseguers',
-	'author_email' => 'typo3@perseguers.ch',
+	'author' => 'Xavier Perseguers (Causal)',
+	'author_email' => 'xavier@causal.ch',
 	'shy' => '',
 	'dependencies' => '',
 	'conflicts' => '',
@@ -29,9 +29,10 @@ $EM_CONF[$_EXTKEY] = array(
 	'clearCacheOnLoad' => 0,
 	'lockType' => '',
 	'author_company' => '',
-	'version' => '0.3.0',
+	'version' => '0.4.0-dev',
 	'constraints' => array(
 		'depends' => array(
+			'typo3' => '4.5.0-6.2.99'
 		),
 		'conflicts' => array(
 		),

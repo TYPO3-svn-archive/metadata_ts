@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2010 Xavier Perseguers (typo3@perseguers.ch)
+*  (c) 2008-2014 Xavier Perseguers <xavier@causal.ch>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -75,7 +75,7 @@ class user_metadata_cobj {
 		}
 
 		if ($this->conf['debug']) {
-			t3lib_div::debug($this->data);
+			t3lib_utility_Debug::debug($this->data);
 		}
 
 		$content = $this->getFieldVal($field);

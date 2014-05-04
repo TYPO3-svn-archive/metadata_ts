@@ -1,3 +1,7 @@
+2014-05-04  Xavier Perseguers  <xavier@causal.ch>
+
+	* [BUGFIX] Invalid call to debug method
+
 2010-10-20  Xavier Perseguers  <typo3@perseguers.ch>
 
 	* Integrated library PHP_JPEG_Metadata_Toolkit to retrieve XMP metadata (PDF files)
