@@ -1,5 +1,6 @@
 2014-05-04  Xavier Perseguers  <xavier@causal.ch>
 
+	* [TASK] Set dependency to TYPO3 4.5-4.7 (tested)
 	* [BUGFIX] Invalid call to debug method
 
 2010-10-20  Xavier Perseguers  <typo3@perseguers.ch>
