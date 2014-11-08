@@ -1,3 +1,7 @@
+2014-11-08  Xavier Perseguers  <xavier@causal.ch>
+
+	* [BUGFIX] Prevent use of XMP toolkit when no metadata are available
+
 2014-05-04  Xavier Perseguers  <xavier@causal.ch>
 
 	* [TASK] Set dependency to TYPO3 4.5-4.7 (tested)

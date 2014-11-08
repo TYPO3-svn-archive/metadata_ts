@@ -181,7 +181,7 @@ class user_metadata_cobj {
 				$cmd = $extconf['pdfinfoTool'] . ' -meta "' . $file . '"';
 
 				exec($cmd, $pdfmeta, $ret = '');
-				if (!$ret && is_array($pdfmeta)) {
+				if (!$ret && is_array($pdfmeta) && count($pdfmeta) > 0) {
 					$xmlStr = '';
 					$output = FALSE;
 					foreach ($pdfmeta as $line) {
